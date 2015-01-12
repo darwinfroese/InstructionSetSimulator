@@ -1,7 +1,7 @@
 #ifndef __STATE_MACHINE_H
 #define __STATE_MACHINE_H
 
-// States
+// States of the State Machine
 #define STATE_OFF		-1
 #define STATE_RUNNING	0
 #define STATE_STOPPED	1
@@ -9,8 +9,7 @@
 #define STATE_RESUME	3
 #define STATE_EXITING	4
 
-// Change states
-// current state -- how to process
+// A command object
 typedef struct {
 	unsigned char op;
 	unsigned char argOne;
@@ -18,11 +17,15 @@ typedef struct {
 	unsigned char argThree;
 }Command;
 
+// State object, contains the state and a function
+// to process that state
 typedef struct {
 	int status;
 	void (*handleState)(void *);
 }State;
 
+// State machine, primitive object that will be expanded 
+// on as we add more features to the simulator
 typedef struct {
 	State *currentState;
 }StateMachine;

@@ -2,8 +2,12 @@
 #include "state_machine.h"
 #include "cmd_index.h"
 
+// This is the local state machine so that it can be
+// accessed when states change easily
 static StateMachine *stateMachine;
 
+// This reads the next command from the input file
+// Currently - Static processing
 Command *GetCommand() {
 	Command *c = (Command *)malloc(sizeof(Command));
 	c->op = STOP;
@@ -17,6 +21,8 @@ Command *GetCommand() {
 	return c;
 }
 
+// Changes the states based on the input, sets
+// the function if necessary
 void ProcessStateChange(int nextState, State *s) {
 	switch(nextState) {
 	case STATE_RUNNING: 
@@ -38,6 +44,8 @@ void ProcessStateChange(int nextState, State *s) {
 	}
 }
 
+// The Idle loop, this is where most of the commands will get processed from
+// This is the main loop of our simulator
 void Idle(void *d) {
 	while(stateMachine->currentState->status != STATE_EXITING) {
 		// get command
@@ -47,23 +55,28 @@ void Idle(void *d) {
 	}
 }
 
+// Switches out of the PowerOn state
 void PowerOn(void *d) {
 	stateMachine = (StateMachine *)d;
 	ProcessStateChange(STATE_RUNNING, stateMachine->currentState);
 }
 
+// Switches into a stopped state
 void Stop(void *d) {
 	ProcessStateChange(STATE_STOPPED, stateMachine->currentState);
 }
 
+// Switches into a paused state
 void Pause(void *d) {
 	ProcessStateChange(STATE_PAUSED, stateMachine->currentState);
 }
 
+// Resumes from pause *only*
 void Resume(void *d) {
 	ProcessStateChange(STATE_RESUME, stateMachine->currentState);
 }
 
+// Exits the state machine
 void Exit(void *d) {
 	ProcessStateChange(STATE_EXITING, stateMachine->currentState);
 }
