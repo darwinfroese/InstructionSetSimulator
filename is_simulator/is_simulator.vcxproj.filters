@@ -21,12 +21,27 @@
     <ClCompile Include="state_machine.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file_reader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmd_parser.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="state_machine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cmd_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file_reader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="reg_index.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

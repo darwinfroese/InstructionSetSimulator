@@ -3,12 +3,23 @@
 
 #include "state_machine.h"
 
-// State Definitions -- These will be used to tell the current
-// state which state to transition into
-#define STOP	0
-#define PAUSE	1
-#define RESUME	2
-#define EXIT	3
+// Machine Operations
+#define STOP	00
+#define PAUSE	01
+#define RESUME	02
+#define EXIT	03
+// 1 argument
+#define BRANCH	10
+// 2 arguments
+#define NOT		20
+// 3 arguments
+#define ADD		30
+#define SUB		31
+#define MULT	32
+#define DIV		33
+#define OR		34
+#define	AND		35
+#define XOR		36
 
 // Function Pointer for the Jump Table below
 typedef void (*CommandHandle)(void *);

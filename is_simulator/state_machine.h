@@ -15,6 +15,7 @@ typedef struct {
 	unsigned char argOne;
 	unsigned char argTwo;
 	unsigned char argThree;
+	char *label;
 }Command;
 
 // State object, contains the state and a function

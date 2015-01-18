@@ -43,6 +43,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -62,11 +63,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cmd_parser.c" />
+    <ClCompile Include="file_reader.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="state_machine.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="reg_index.h" />
     <ClInclude Include="cmd_index.h" />
+    <ClInclude Include="cmd_parser.h" />
+    <ClInclude Include="file_reader.h" />
     <ClInclude Include="state_machine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

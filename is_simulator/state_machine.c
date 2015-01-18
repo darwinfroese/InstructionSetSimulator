@@ -1,6 +1,8 @@
 #include <stdlib.h>
+#include "file_reader.h"
 #include "state_machine.h"
 #include "cmd_index.h"
+#include "cmd_parser.h"
 
 // This is the local state machine so that it can be
 // accessed when states change easily
@@ -9,14 +11,13 @@ static StateMachine *stateMachine;
 // This reads the next command from the input file
 // Currently - Static processing
 Command *GetCommand() {
+	char *line = (char *)malloc(LINE_MAX);
 	Command *c = (Command *)malloc(sizeof(Command));
-	c->op = STOP;
-	c->argOne = -1;
-	c->argTwo = -1;
-	c->argThree = -1;
+	
+	line = ParseFile();
 
-	if (stateMachine->currentState->status == STATE_STOPPED)
-		c->op = EXIT;
+	// Decompose the command
+	ParseCommand(line, c);
 
 	return c;
 }
@@ -58,6 +59,10 @@ void Idle(void *d) {
 // Switches out of the PowerOn state
 void PowerOn(void *d) {
 	stateMachine = (StateMachine *)d;
+
+	// Open the file
+	OpenFile();
+
 	ProcessStateChange(STATE_RUNNING, stateMachine->currentState);
 }
 
