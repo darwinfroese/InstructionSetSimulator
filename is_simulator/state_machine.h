@@ -12,9 +12,9 @@
 // A command object
 typedef struct {
 	unsigned char op;
-	unsigned char argOne;
-	unsigned char argTwo;
-	unsigned char argThree;
+	unsigned char argOne;	// destination
+	unsigned char argTwo;	// source 1
+	unsigned char argThree; // source 2
 	char *label;
 }Command;
 

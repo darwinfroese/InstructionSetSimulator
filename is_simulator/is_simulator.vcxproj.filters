@@ -24,6 +24,9 @@
     <ClCompile Include="file_reader.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="arithmetic_ops.c">
+      <Filter>Header Files</Filter>
+    </ClCompile>
     <ClCompile Include="cmd_parser.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,6 +46,12 @@
     </ClInclude>
     <ClInclude Include="reg_index.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="registers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="operations.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

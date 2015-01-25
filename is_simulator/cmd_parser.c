@@ -6,9 +6,10 @@
 #include "cmd_index.h"
 #include "reg_index.h"
 
-#define LABEL_MAX	256
-#define CMD_LEN		5
-#define ARG_LEN		4
+#define LABEL_MAX		256
+#define CMD_LEN			5
+#define ARG_LEN			4
+#define REG_INDICATOR	'$'
 
 static int index = 0;
 static int cmdOffset = 0;
@@ -16,6 +17,9 @@ static int argOneOffset = 0;
 static int argTwoOffset = 0;
 static int argThreeOffset = 0;
 
+// Get the operation that we want as an unsigned char
+// instead of a string so that we can use it in our 
+// other functions easier
 unsigned char GetOp(char *cmd) {
 	int i;
 	unsigned char op;
@@ -40,42 +44,76 @@ unsigned char GetOp(char *cmd) {
 		op = AND;
 	else if (strcmp(cmd, "xor"))
 		op = XOR;
-	else if (strcmp(cmd, "br"))
-		op = BRANCH;
+	else if (strcmp(cmd, "jmp"))
+		op = JMP;
 
 	return op;
 }
 
-unsigned char GetArg(char *args) {
-	// Get register or value
+// if it's a value, return the value
+// if it's a register, return the value in the register
+unsigned char GetArg(char *args, unsigned char *arg) {
+	unsigned char arg_type;
+
+	if (args[0] == REG_INDICATOR) {
+		arg_type = 'r';
+
+		switch (args[2]) {
+		case 0:
+			*arg = REG_0;
+			break;
+		case 1:
+			*arg = REG_1;
+			break;
+		case 2:
+			*arg = REG_2;
+			break;
+		case 3:
+			*arg = REG_3;
+			break;
+		case 4:
+			*arg = REG_4;
+			break;
+		}
+	}
+	else {
+		arg_type = 'v';
+		*arg = (unsigned char)atoi(args);
+	}
+
+	return arg_type;
 }
 
-char * GetLabel(char *line) {
-	char *label = (char *)malloc(LABEL_MAX);
-
-	while (line[index] != '\t' || index < (LABEL_MAX-1))	{
-		label[index] = line[index];
+// Avoid code duplication by using this function to copy characters
+void CopyCharacters(char term, int maxLen, int offset, char *dest, char *src) {
+	while (src[index] != '\t' || (index-offset) < (maxLen-1))	{
+		dest[index-offset] = src[index];
 		index++;
 	}
 
-	label[index] = '\0';
+	dest[index-offset] = '\0';
 	index++;
+}
+
+// Returns the label (as a string) 
+// if there is one at the start of the 
+// line
+char * GetLabel(char *line) {
+	char *label = (char *)malloc(LABEL_MAX);
+
+	CopyCharacters('\t', LABEL_MAX, 0, label, line);
 	cmdOffset = index;
 
 	return label;
 }
 
+// Returns the command (as a char) so that 
+// it is easier to use in other functions
 unsigned char GetCommand(char *line) {
 	unsigned char op;
 	char cmd[CMD_LEN];
 
-	while (line[index] != '\t' || (index-cmdOffset) < (CMD_LEN-1)) {
-		cmd[index-cmdOffset] = line[index];
-		index++;
-	}
-
-	cmd[index-cmdOffset] = '\0';
-	index++;
+	CopyCharacters('\t', CMD_LEN, cmdOffset, cmd, line);
 	argOneOffset = index;
 
 	op = GetOp(cmd);
@@ -83,82 +121,81 @@ unsigned char GetCommand(char *line) {
 	return op;
 }
 
-void GetOneArgument(char *line, unsigned char *args) {
+// Get's the argument and stores it in the array 
+// passed in.
+char GetOneArgument(char *line, unsigned char *args) {
 	char arg[ARG_LEN];
 
-	while (line[index] != ',' || (index-argOneOffset) < (ARG_LEN-1)) {
-		arg[index-argOneOffset] = line[index];
-		index++;
-	}
-
-	arg[index-argOneOffset] = '\0';
-	index++;
+	CopyCharacters(',', ARG_LEN, argOneOffset, arg, line);
 	argTwoOffset = index;
 
-	args[0] = GetArg(arg);
+	return GetArg(arg, &args[0]);
 }
 
-void GetTwoArguments(char *line, unsigned char *args) {
+// Calls the function to get the first argument and then
+// grabs the second argument
+char GetTwoArguments(char *line, unsigned char *args) {
 	char arg[ARG_LEN];
 
 	GetOneArgument(line, args);
 
-	while (line[index] != ',' || (index-argTwoOffset) < (ARG_LEN-1)) {
-		arg[index-argTwoOffset] = line[index];
-		index++;
-	}
-
-	arg[index-argTwoOffset] = '\0';
-	index++;
+	CopyCharacters(',', ARG_LEN, argTwoOffset, arg, line);
 	argThreeOffset = index;
 
-	args[1] = GetArg(arg);
+	return GetArg(arg, &args[1]);
 }
 
-void GetThreeArguments(char *line, unsigned char *args) {
+// Calls the function to get the first two arguments and then
+// grabs the third argument
+char GetThreeArguments(char *line, unsigned char *args) {
 	char arg[ARG_LEN];
 
 	GetTwoArguments(line, args);
 
-	while (line[index] != ',' || (index-argThreeOffset) < (ARG_LEN-1)) {
-		arg[index-argThreeOffset] = line[index];
-		index++;
-	}
+	CopyCharacters(',', ARG_LEN, argThreeOffset, arg, line);
 
-	arg[index-argThreeOffset] = '\0';
-
-	args[2] = GetArg(arg);
+	return GetArg(arg, &args[2]);
 }
 
+// Handles parsing the command based off what data is in
+// each line
 void ParseCommand(char *line, Command *c) {
 	char *label;
 	unsigned char cmd;
 	unsigned char *args = (unsigned char *)malloc(3);
 
+	index = 0;
+
 	// Check for a label
-	if (line[0] != '\t') {
+	if (line[index] != '\t') {
 		label = GetLabel(line);
 		c->label = label;
 	}
-	else {
-		cmd = GetCommand(line);
-		c->op = cmd;
-	}	
+
+	cmd = GetCommand(line);
+	c->op = cmd;
 
 	// Get arguments
 	if (cmd >= 10 && cmd <= 19) {
-		GetOneArgument(line, args);
-		c->argOne = args[0];
+		if (GetOneArgument(line, args) == 'r')
+			c->argOne_r = args[0];
+		else
+			c->argOne_v = args[0];
 	}
 	else if (cmd >= 20 && cmd <= 29) {
-		GetTwoArguments(line, args);
-		c->argOne = args[0];
-		c->argTwo = args[1];
+		if (GetTwoArguments(line, args) =='r') {
+			c->argOne_r = args[0];
+			c->argTwo_r = args[1];
+		}
+		else {
+			c->argOne_v = args[0];
+			c->argTwo_v = args[1];
+		}
 	}
 	else if (cmd >= 30 && cmd <= 39) {
 		GetThreeArguments(line, args);
-		c->argOne = args[0];
-		c->argTwo = args[1];
+		c->argOne_r = args[0];
+		c->argTwo_r = args[1];
 		c->argThree = args[2];
 	}
 }

@@ -19,6 +19,10 @@ char * GetFileLocation() {
 	return path;
 }
 
+// Allows us to open the simulator in an interactive mode
+// where we enter commands one at a time and they are parsed or
+// acted on immediately or specify a file that we want to read
+// from
 void OpenFile() {
 	char *path = GetFileLocation();
 	mode_s = FILE_MODE;
@@ -30,6 +34,8 @@ void OpenFile() {
 		inputFile = fopen(path, "rb");
 }
 
+// Reads the line from the file or command line
+// based on what mode we are in.
 char * ParseFile() {
 	char line[LINE_MAX];
 

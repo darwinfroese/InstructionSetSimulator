@@ -2,6 +2,7 @@
 #define __CMD_INDEX_H
 
 #include "state_machine.h"
+#include "operations.h"
 
 // Machine Operations
 #define STOP	00
@@ -9,7 +10,7 @@
 #define RESUME	02
 #define EXIT	03
 // 1 argument
-#define BRANCH	10
+#define JMP		10
 // 2 arguments
 #define NOT		20
 // 3 arguments
@@ -30,7 +31,19 @@ CommandHandle commands[] = {
 	Stop, 
 	Pause,
 	Resume,
-	Exit
+	Exit,
+	NULL, NULL, NULL, NULL, NULL, NULL,
+	Jump,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	Not,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	Add,
+	Subtract,
+	Multiply,
+	Divide,
+	Or,
+	And,
+	Xor
 };
 
 #endif
