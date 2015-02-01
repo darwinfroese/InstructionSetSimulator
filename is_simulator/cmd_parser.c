@@ -5,6 +5,8 @@
 #include "cmd_parser.h"
 #include "cmd_index.h"
 #include "reg_index.h"
+#include "registers.h"
+#include "operations.h"
 
 #define LABEL_MAX		256
 #define CMD_LEN			5
@@ -28,7 +30,7 @@ unsigned char GetOp(char *cmd) {
 		cmd[i] = tolower(cmd[i]);
 	}
 
-	if (strcmp(cmd,"add"))
+	if (strcmp(cmd,"add") == 0)
 		op = ADD;
 	else if (strcmp(cmd,"sub"))
 		op = SUB;
@@ -52,41 +54,30 @@ unsigned char GetOp(char *cmd) {
 
 // if it's a value, return the value
 // if it's a register, return the value in the register
-unsigned char GetArg(char *args, unsigned char *arg) {
-	unsigned char arg_type;
-
-	if (args[0] == REG_INDICATOR) {
-		arg_type = 'r';
-
-		switch (args[2]) {
+unsigned char GetArg(char *arg) {
+	if (arg[0] == REG_INDICATOR) {
+		switch(arg[2]) {
 		case 0:
-			*arg = REG_0;
-			break;
+			return currentRegisters->registerZero;
 		case 1:
-			*arg = REG_1;
-			break;
+			return currentRegisters->registerOne;
 		case 2:
-			*arg = REG_2;
-			break;
+			return currentRegisters->registerTwo;
 		case 3:
-			*arg = REG_3;
-			break;
+			return currentRegisters->registerThree;
 		case 4:
-			*arg = REG_4;
-			break;
+			return currentRegisters->registerFour;
 		}
 	}
 	else {
-		arg_type = 'v';
-		*arg = (unsigned char)atoi(args);
+		return (unsigned char)(atoi(arg));
 	}
 
-	return arg_type;
 }
 
 // Avoid code duplication by using this function to copy characters
-void CopyCharacters(char term, int maxLen, int offset, char *dest, char *src) {
-	while (src[index] != '\t' || (index-offset) < (maxLen-1))	{
+void CopyCharacters(char term, int maxLen, int offset, char *dest, const char * const src) {
+	while (src[index] != term && src[index] != ' ' && (index-offset) < (maxLen-1))	{
 		dest[index-offset] = src[index];
 		index++;
 	}
@@ -98,8 +89,8 @@ void CopyCharacters(char term, int maxLen, int offset, char *dest, char *src) {
 // Returns the label (as a string) 
 // if there is one at the start of the 
 // line
-char * GetLabel(char *line) {
-	char *label = (char *)malloc(LABEL_MAX);
+char * GetLabel(const char * const line) {
+	char label[LABEL_MAX];
 
 	CopyCharacters('\t', LABEL_MAX, 0, label, line);
 	cmdOffset = index;
@@ -109,7 +100,7 @@ char * GetLabel(char *line) {
 
 // Returns the command (as a char) so that 
 // it is easier to use in other functions
-unsigned char GetCommand(char *line) {
+unsigned char GetCommand(const char * const line) {
 	unsigned char op;
 	char cmd[CMD_LEN];
 
@@ -123,53 +114,59 @@ unsigned char GetCommand(char *line) {
 
 // Get's the argument and stores it in the array 
 // passed in.
-char GetOneArgument(char *line, unsigned char *args) {
+void GetOneArgument(const char * const line, Command *cmd) {
 	char arg[ARG_LEN];
 
 	CopyCharacters(',', ARG_LEN, argOneOffset, arg, line);
 	argTwoOffset = index;
 
-	return GetArg(arg, &args[0]);
+	cmd->argOne = GetArg(arg);
 }
 
 // Calls the function to get the first argument and then
 // grabs the second argument
-char GetTwoArguments(char *line, unsigned char *args) {
+void GetTwoArguments(const char * const line, Command *cmd) {
 	char arg[ARG_LEN];
 
-	GetOneArgument(line, args);
+	GetOneArgument(line, cmd);
 
 	CopyCharacters(',', ARG_LEN, argTwoOffset, arg, line);
 	argThreeOffset = index;
 
-	return GetArg(arg, &args[1]);
+	cmd->argTwo = GetArg(arg);
 }
 
 // Calls the function to get the first two arguments and then
 // grabs the third argument
-char GetThreeArguments(char *line, unsigned char *args) {
+void GetThreeArguments(const char * const line, Command *cmd) {
 	char arg[ARG_LEN];
 
-	GetTwoArguments(line, args);
+	GetTwoArguments(line, cmd);
 
-	CopyCharacters(',', ARG_LEN, argThreeOffset, arg, line);
-
-	return GetArg(arg, &args[2]);
+	CopyCharacters('\n', ARG_LEN, argThreeOffset, arg, line);
+	
+	cmd->argThree = GetArg(arg);
 }
 
 // Handles parsing the command based off what data is in
 // each line
-void ParseCommand(char *line, Command *c) {
-	char *label;
+void ParseCommand(const char * const line, Command *c) {
+	char label[LABEL_MAX];
 	unsigned char cmd;
-	unsigned char *args = (unsigned char *)malloc(3);
+	unsigned char args[ARG_LEN];
 
 	index = 0;
 
 	// Check for a label
-	if (line[index] != '\t') {
-		label = GetLabel(line);
+	if (line[index] != '\t') {		
+		strcpy(label, GetLabel(line));
 		c->label = label;
+	}
+	else {
+		// Don't have label, need to set these up
+		// to skip the opening tab
+		cmdOffset = 1;
+		index++;
 	}
 
 	cmd = GetCommand(line);
@@ -177,25 +174,12 @@ void ParseCommand(char *line, Command *c) {
 
 	// Get arguments
 	if (cmd >= 10 && cmd <= 19) {
-		if (GetOneArgument(line, args) == 'r')
-			c->argOne_r = args[0];
-		else
-			c->argOne_v = args[0];
+		GetOneArgument(line, c);
 	}
 	else if (cmd >= 20 && cmd <= 29) {
-		if (GetTwoArguments(line, args) =='r') {
-			c->argOne_r = args[0];
-			c->argTwo_r = args[1];
-		}
-		else {
-			c->argOne_v = args[0];
-			c->argTwo_v = args[1];
-		}
+		GetTwoArguments(line, c);
 	}
 	else if (cmd >= 30 && cmd <= 39) {
-		GetThreeArguments(line, args);
-		c->argOne_r = args[0];
-		c->argTwo_r = args[1];
-		c->argThree = args[2];
+		GetThreeArguments(line, c);
 	}
 }

@@ -65,8 +65,11 @@
   <ItemGroup>
     <ClCompile Include="arithmetic_ops.c" />
     <ClCompile Include="cmd_parser.c" />
+    <ClCompile Include="conditional_ops.c" />
     <ClCompile Include="file_reader.c" />
+    <ClCompile Include="logical_ops.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="misc_ops.c" />
     <ClCompile Include="state_machine.c" />
   </ItemGroup>
   <ItemGroup>

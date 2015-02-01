@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "file_reader.h"
 #include "state_machine.h"
+#include "operations.h"
 #include "cmd_index.h"
 #include "cmd_parser.h"
 
@@ -10,7 +11,7 @@ static StateMachine *stateMachine;
 
 // This reads the next command from the input file
 // Currently - Static processing
-Command *GetCommand() {
+Command *GetCommandInformation() {
 	char *line = (char *)malloc(LINE_MAX);
 	Command *c = (Command *)malloc(sizeof(Command));
 	
@@ -50,7 +51,7 @@ void ProcessStateChange(int nextState, State *s) {
 void Idle(void *d) {
 	while(stateMachine->currentState->status != STATE_EXITING) {
 		// get command
-		Command *c = GetCommand();
+		Command *c = GetCommandInformation();
 		// call command function
 		commands[c->op](NULL);
 	}

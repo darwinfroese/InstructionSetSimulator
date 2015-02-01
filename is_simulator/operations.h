@@ -25,5 +25,6 @@ void Divide(void *);
 void Or(void *);
 void And(void *);
 void Xor(void *);
+void NotImplemented(void *);
 
 #endif

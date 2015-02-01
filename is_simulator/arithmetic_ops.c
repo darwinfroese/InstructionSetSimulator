@@ -1,5 +1,6 @@
 #include "operations.h"
 #include "registers.h"
+#include "cmd_index.h"
 
 void StoreAnswer(unsigned char answer, unsigned char dest) {
 	switch(dest) {

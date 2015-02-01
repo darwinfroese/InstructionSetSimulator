@@ -27,16 +27,21 @@ typedef void (*CommandHandle)(void *);
 
 // Jump Table for the different command functions
 // Each entry in the array contains a function for that command
-CommandHandle commands[] = {
+static CommandHandle commands[] = {
 	Stop, 
 	Pause,
 	Resume,
 	Exit,
-	NULL, NULL, NULL, NULL, NULL, NULL,
+	NotImplemented, NotImplemented, NotImplemented, 
+	NotImplemented, NotImplemented, NotImplemented,
 	Jump,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NotImplemented, NotImplemented, NotImplemented, 
+	NotImplemented, NotImplemented, NotImplemented, 
+	NotImplemented, NotImplemented, NotImplemented,
 	Not,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NotImplemented, NotImplemented, NotImplemented, 
+	NotImplemented, NotImplemented, NotImplemented, 
+	NotImplemented, NotImplemented, NotImplemented,
 	Add,
 	Subtract,
 	Multiply,

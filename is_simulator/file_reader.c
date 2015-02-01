@@ -1,5 +1,6 @@
 #include "file_reader.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -38,6 +39,7 @@ void OpenFile() {
 // based on what mode we are in.
 char * ParseFile() {
 	char line[LINE_MAX];
+	char line_t[LINE_MAX];
 
 	if (inputFile == NULL && mode_s == FILE_MODE) {
 		fprintf(stderr, "File was not opened.\n");
@@ -49,7 +51,13 @@ char * ParseFile() {
 		fgets(line, LINE_MAX, inputFile);
 		break;
 	case INTERACTIVE_MODE:
+		fprintf(stdout, "> ");
 		fgets(line, LINE_MAX, stdin);
+		strcpy(line_t, line);
+		line[0] = '\t';
+		line[1] = '\0';
+		strcat(line, line_t);
+		fprintf(stdout, "Modified to: %s\n", line);
 		break;
 	}
 
