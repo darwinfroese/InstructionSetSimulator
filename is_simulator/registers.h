@@ -11,6 +11,6 @@ typedef struct {
 	unsigned char programCounter;
 }RegisterState;
 
-static RegisterState *currentRegisters;
+extern RegisterState *currentRegisters;
 
 #endif

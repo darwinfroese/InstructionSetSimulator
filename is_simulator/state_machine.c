@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "registers.h"
 #include "file_reader.h"
 #include "state_machine.h"
 #include "operations.h"
@@ -8,6 +9,75 @@
 // This is the local state machine so that it can be
 // accessed when states change easily
 static StateMachine *stateMachine;
+RegisterState *currentRegisters;
+static void *DATA = NULL;
+
+// Build a data block that we can send to our command
+// function. Use switch case instead of if/else so that
+// we can add functionality to individual numbers if we
+// have the need to later
+void CreateDataBlock(Command *c) {
+	OneArg_s *arg;
+	TwoArgs_s *args2;
+	ThreeArgs_s *args3;
+
+	switch(c->op) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+	case 9:
+		DATA = NULL;
+		break;
+	case 10:
+	case 11:
+	case 12:
+	case 13:
+	case 14:
+	case 15:
+	case 16:
+	case 17:
+	case 18:
+	case 19:	
+		arg = (OneArg_s *)malloc(sizeof(OneArg_s));
+		arg->argOne = c->argOne;
+		DATA = arg;
+		break;
+	case 20:
+	case 21:
+	case 22:
+	case 23:
+	case 24:
+	case 25:
+	case 26:
+	case 27:
+	case 28:
+	case 29:
+		args2 = (TwoArgs_s *)malloc(sizeof(TwoArgs_s));
+		args2->argOne = c->argOne;
+		args2->argTwo = c->argTwo;
+		DATA = args2;
+		break;
+	case 30:
+	case 31:
+	case 32:
+	case 33:
+	case 34:
+	case 35:
+	case 36:
+		args3 = (ThreeArgs_s *)malloc(sizeof(ThreeArgs_s));
+		args3->argOne = c->argOne;
+		args3->argTwo = c->argTwo;
+		args3->argThree = c->argThree;
+		DATA = args3;
+		break;
+	}
+}
 
 // This reads the next command from the input file
 // Currently - Static processing
@@ -19,6 +89,7 @@ Command *GetCommandInformation() {
 
 	// Decompose the command
 	ParseCommand(line, c);
+	CreateDataBlock(c);
 
 	return c;
 }
@@ -53,14 +124,16 @@ void Idle(void *d) {
 		// get command
 		Command *c = GetCommandInformation();
 		// call command function
-		commands[c->op](NULL);
+		commands[c->op](DATA);
 	}
 }
 
 // Switches out of the PowerOn state
 void PowerOn(void *d) {
 	stateMachine = (StateMachine *)d;
-
+	// Init registers
+	currentRegisters = (RegisterState *)malloc(sizeof(RegisterState));
+	currentRegisters->programCounter = 0;
 	// Open the file
 	OpenFile();
 

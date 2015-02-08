@@ -12,12 +12,16 @@
 #define CMD_LEN			5
 #define ARG_LEN			4
 #define REG_INDICATOR	'$'
+#define LINE_LEN		1024
+#define REG_LOC			0
+#define REG_VAL			1
 
 static int index = 0;
 static int cmdOffset = 0;
 static int argOneOffset = 0;
 static int argTwoOffset = 0;
 static int argThreeOffset = 0;
+static char *READ_LINE;
 
 // Get the operation that we want as an unsigned char
 // instead of a string so that we can use it in our 
@@ -32,53 +36,64 @@ unsigned char GetOp(char *cmd) {
 
 	if (strcmp(cmd,"add") == 0)
 		op = ADD;
-	else if (strcmp(cmd,"sub"))
+	else if (strcmp(cmd,"sub") == 0)
 		op = SUB;
-	else if (strcmp(cmd,"mult"))
+	else if (strcmp(cmd,"mult") == 0)
 		op = MULT;
-	else if (strcmp(cmd, "div"))
+	else if (strcmp(cmd, "div") == 0)
 		op = DIV;
-	else if (strcmp(cmd, "not"))
+	else if (strcmp(cmd, "not") == 0)
 		op = NOT;
-	else if (strcmp(cmd, "or"))
+	else if (strcmp(cmd, "or") == 0)
 		op = OR;
-	else if (strcmp(cmd, "and"))
+	else if (strcmp(cmd, "and") == 0)
 		op = AND;
-	else if (strcmp(cmd, "xor"))
+	else if (strcmp(cmd, "xor") == 0)
 		op = XOR;
-	else if (strcmp(cmd, "jmp"))
+	else if (strcmp(cmd, "jmp") == 0)
 		op = JMP;
+	else if (strcmp(cmd, "prv") == 0)
+		op = PRV;
 
 	return op;
 }
 
 // if it's a value, return the value
 // if it's a register, return the value in the register
-unsigned char GetArg(char *arg) {
+unsigned char GetArg(char *arg, int flag) {
+	unsigned char retVal;
+
 	if (arg[0] == REG_INDICATOR) {
 		switch(arg[2]) {
-		case 0:
-			return currentRegisters->registerZero;
-		case 1:
-			return currentRegisters->registerOne;
-		case 2:
-			return currentRegisters->registerTwo;
-		case 3:
-			return currentRegisters->registerThree;
-		case 4:
-			return currentRegisters->registerFour;
+		case '0':
+			retVal = (flag == REG_LOC ? 0 : currentRegisters->registerZero);
+			break;
+		case '1':
+			retVal = (flag == REG_LOC ? 1 : currentRegisters->registerOne);
+			break;
+		case '2':
+			retVal = (flag == REG_LOC ? 2 : currentRegisters->registerTwo);
+			break;
+		case '3':
+			retVal = (flag == REG_LOC ? 3 : currentRegisters->registerThree);
+			break;
+		case '4':
+			retVal = (flag == REG_LOC ? 4 : currentRegisters->registerFour);
+			break;
 		}
 	}
 	else {
 		return (unsigned char)(atoi(arg));
 	}
 
+	return retVal;
 }
 
 // Avoid code duplication by using this function to copy characters
-void CopyCharacters(char term, int maxLen, int offset, char *dest, const char * const src) {
-	while (src[index] != term && src[index] != ' ' && (index-offset) < (maxLen-1))	{
-		dest[index-offset] = src[index];
+void CopyCharacters(char term, int maxLen, int offset, char *dest) {
+	while (READ_LINE[index] != term && READ_LINE[index] != ' ' 
+		&& READ_LINE[index] != '\n' && (index-offset) < (maxLen-1))	{
+		dest[index-offset] = READ_LINE[index];
 		index++;
 	}
 
@@ -89,10 +104,10 @@ void CopyCharacters(char term, int maxLen, int offset, char *dest, const char * 
 // Returns the label (as a string) 
 // if there is one at the start of the 
 // line
-char * GetLabel(const char * const line) {
+char * GetLabel() {
 	char label[LABEL_MAX];
 
-	CopyCharacters('\t', LABEL_MAX, 0, label, line);
+	CopyCharacters('\t', LABEL_MAX, 0, label);
 	cmdOffset = index;
 
 	return label;
@@ -100,11 +115,11 @@ char * GetLabel(const char * const line) {
 
 // Returns the command (as a char) so that 
 // it is easier to use in other functions
-unsigned char GetCommand(const char * const line) {
+unsigned char GetCommand() {
 	unsigned char op;
 	char cmd[CMD_LEN];
 
-	CopyCharacters('\t', CMD_LEN, cmdOffset, cmd, line);
+	CopyCharacters('\t', CMD_LEN, cmdOffset, cmd);
 	argOneOffset = index;
 
 	op = GetOp(cmd);
@@ -114,38 +129,41 @@ unsigned char GetCommand(const char * const line) {
 
 // Get's the argument and stores it in the array 
 // passed in.
-void GetOneArgument(const char * const line, Command *cmd) {
+void GetOneArgument(Command *cmd) {
 	char arg[ARG_LEN];
 
-	CopyCharacters(',', ARG_LEN, argOneOffset, arg, line);
+	CopyCharacters(',', ARG_LEN, argOneOffset, arg);
 	argTwoOffset = index;
 
-	cmd->argOne = GetArg(arg);
+	if (cmd->op >= 20)
+		cmd->argOne = GetArg(arg, REG_LOC);
+	else
+		cmd->argOne = GetArg(arg, REG_VAL);
 }
 
 // Calls the function to get the first argument and then
 // grabs the second argument
-void GetTwoArguments(const char * const line, Command *cmd) {
+void GetTwoArguments(Command *cmd) {
 	char arg[ARG_LEN];
 
-	GetOneArgument(line, cmd);
+	GetOneArgument(cmd);
 
-	CopyCharacters(',', ARG_LEN, argTwoOffset, arg, line);
+	CopyCharacters(',', ARG_LEN, argTwoOffset, arg);
 	argThreeOffset = index;
 
-	cmd->argTwo = GetArg(arg);
+	cmd->argTwo = GetArg(arg, REG_VAL);
 }
 
 // Calls the function to get the first two arguments and then
 // grabs the third argument
-void GetThreeArguments(const char * const line, Command *cmd) {
+void GetThreeArguments(Command *cmd) {
 	char arg[ARG_LEN];
 
-	GetTwoArguments(line, cmd);
+	GetTwoArguments(cmd);
 
-	CopyCharacters('\n', ARG_LEN, argThreeOffset, arg, line);
+	CopyCharacters('\n', ARG_LEN, argThreeOffset, arg);
 	
-	cmd->argThree = GetArg(arg);
+	cmd->argThree = GetArg(arg, REG_VAL);
 }
 
 // Handles parsing the command based off what data is in
@@ -156,10 +174,12 @@ void ParseCommand(const char * const line, Command *c) {
 	unsigned char args[ARG_LEN];
 
 	index = 0;
+	READ_LINE = (char *)malloc(LINE_LEN);
+	strcpy(READ_LINE, line);
 
 	// Check for a label
 	if (line[index] != '\t') {		
-		strcpy(label, GetLabel(line));
+		strcpy(label, GetLabel());
 		c->label = label;
 	}
 	else {
@@ -169,17 +189,17 @@ void ParseCommand(const char * const line, Command *c) {
 		index++;
 	}
 
-	cmd = GetCommand(line);
+	cmd = GetCommand();
 	c->op = cmd;
 
 	// Get arguments
 	if (cmd >= 10 && cmd <= 19) {
-		GetOneArgument(line, c);
+		GetOneArgument(c);
 	}
 	else if (cmd >= 20 && cmd <= 29) {
-		GetTwoArguments(line, c);
+		GetTwoArguments(c);
 	}
 	else if (cmd >= 30 && cmd <= 39) {
-		GetThreeArguments(line, c);
+		GetThreeArguments(c);
 	}
 }

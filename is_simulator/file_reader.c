@@ -57,7 +57,6 @@ char * ParseFile() {
 		line[0] = '\t';
 		line[1] = '\0';
 		strcat(line, line_t);
-		fprintf(stdout, "Modified to: %s\n", line);
 		break;
 	}
 

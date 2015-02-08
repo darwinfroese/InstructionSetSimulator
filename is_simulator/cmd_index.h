@@ -9,6 +9,7 @@
 #define PAUSE	01
 #define RESUME	02
 #define EXIT	03
+#define PRV		04 // print register values
 // 1 argument
 #define JMP		10
 // 2 arguments
@@ -32,7 +33,8 @@ static CommandHandle commands[] = {
 	Pause,
 	Resume,
 	Exit,
-	NotImplemented, NotImplemented, NotImplemented, 
+	PrintRegisters,
+	NotImplemented, NotImplemented, 
 	NotImplemented, NotImplemented, NotImplemented,
 	Jump,
 	NotImplemented, NotImplemented, NotImplemented, 
